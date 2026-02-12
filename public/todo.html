@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODO</title>
+</head>
+<body>
+    <div></div>
+    <h1>待辦事項</h1>
+    <div id="todo_list"></div>
+    新增待辦<input type="text" id="content">
+    <button onclick="add_list()">添加</button>
+    <hr>
+    <button onclick="log_out()">登出</button>
+
+    <!-- 所有的 fetch 都必須加上 Authorization 標頭： -->
+    <script>
+        // 封裝一個取得 Header 的函數
+        // 統一生成 API 請求需要的標頭 (Headers)
+        function getAuthHeader() {
+            const token = localStorage.getItem("my_token");
+            return {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token //這是 JWT 驗證的標準寫法。Bearer 表示「持有者憑證」，後面跟著你的 Token。
+            };
+        }
+        // 登出
+        async function log_out() {
+            localStorage.removeItem('my_token');
+            window.location.href = '/index.html'
+        }
+
+
+        async function add_list() {
+            let content = document.querySelector("#content").value;
+            let response = await fetch("/api/todo",{
+                method:"POST",
+                headers: getAuthHeader(), // 帶著門票去
+                body:JSON.stringify({"content":content})
+            })
+            let result = await response.json();
+            if (result.ok){
+                show_list()
+            }
+        }
+
+        async function show_list() {
+            let response =await fetch("/api/todo",{
+                method:"GET",
+                headers: getAuthHeader() // 帶著門票去
+            })
+            if (response.status === 401) { // 如果 Token 過期或沒登入
+                window.location.href = "/";
+                return;
+            }
+            let result = await response.json();
+            let todo_list = document.querySelector("#todo_list");
+            todo_list.innerHTML="";
+            for(let i = 0; i <result.length;i++){
+                todo_list.innerHTML+=`
+                    <div id="todo-${result[i].id }">
+                        "id: " ${result[i].id} "content:" ${result[i].content} "是否完成" ${result[i].status}
+                        <button onclick="delete_list(${result[i].id})">刪除</button>
+                        <button onclick="updated_list(${result[i].id},'${result[i].content}',${result[i].status})">修改</button>
+                    </div>
+                    `
+            }
+        }
+        //未使用到api
+        async function updated_list(id,oldContent, oldStatus) {
+            let tododiv = document.querySelector("#todo-" + id);
+            tododiv.innerHTML = `
+                <input type="text" id="edit-content-${id}" value="${oldContent}">
+                <select name="" id="edit-status-${id}">
+                    <option value="false" ${!oldStatus ? "selected" : ""}>未完成</option>
+                    <option value="true"  ${oldStatus ? "selected" : ""}>已完成</option>
+                </select>
+                <button onclick="save_edit(${id})">儲存</button>
+                <button onclick="show_list()">取消</button>
+            `;
+        }
+        async function save_edit(id) {
+            let newcontent = document.querySelector("#edit-content-"+id).value
+            let newstatus = document.querySelector("#edit-status-"+id).value === "true" ? 1 : 0;
+            let response = await fetch("/api/todo/"+id,
+                {
+                    method:"PUT",
+                    body:JSON.stringify({"content":newcontent,"status":newstatus}),
+                    headers: getAuthHeader(), // 帶著門票去
+                }
+            )
+            let result = await response.json()
+            if (result.ok){
+                show_list()
+            }
+
+
+        }
+
+        async function delete_list(id) {
+            let response = await fetch("/api/todo/"+id,
+                {
+                    method:"DELETE",
+                    headers: getAuthHeader(), // 帶著門票去
+                }
+            )
+            let result = await response.json();
+            if (result.ok){
+                show_list()
+            }
+        }
+        show_list()
+    </script>
+</body>
+</html>
+

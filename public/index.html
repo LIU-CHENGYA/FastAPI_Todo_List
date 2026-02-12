@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>歡迎</h1>
+    <h2>若已有帳號請登入</h2>
+    帳號: <input type="text" id="account"> <br>
+    密碼: <input type="text" id="password"> <br>
+    <button onclick="log_in()">登入</button>
+    <div id="board"></div>
+    <hr>
+    <h2>註冊</h2>
+    帳號: <input type="text" id="create_account"> <br>
+    密碼: <input type="text" id="create_password"> <br>
+    <button onclick="register()">註冊</button>
+    <div id="board2"></div>
+    <!-- 你的 result.access_token != Node 是筆誤（應該是 undefined），且需要儲存 Token： -->
+    <script>
+        async function log_in() {
+            let account=  document.querySelector("#account").value
+            let password = document.querySelector("#password").value
+            let board = document.querySelector("#board")
+            let response = await fetch("/login",{
+                method:"POST", 
+                headers: { "Content-Type": "application/json" }, // 加上這行
+                body: JSON.stringify({
+                    "username":account,
+                    "password" :password
+                })             
+            })
+            let result =await response.json()
+            if (response.ok && result.access_token){
+                // 【重要】將 Token 存入瀏覽器儲存空間，localStorage 是瀏覽器提供的永久儲存空間（除非使用者手動清除）
+                localStorage.setItem("my_token", result.access_token);
+                //導入todo畫面
+                window.location.href = '/todo.html'
+            }
+            else{
+                board.innerHTML = "帳號或密碼錯誤"
+            }
+        }
+        //設計註冊完可以直接進到TODO畫面!，但是:因為沒有 Token 而把使用者踢回首頁。
+        async function register() {
+            let username = document.querySelector("#create_account").value;
+            let password = document.querySelector("#create_password").value;
+            let board2 = document.querySelector("#board2");
+            let response = await fetch("/register",{
+                method:"POST",
+                headers: { "Content-Type": "application/json" }, // 加上這行
+                body: JSON.stringify({
+                    "username":username,
+                    "password" :password
+                })             
+            })
+            let result =await response.json();
+            if (result.ok){
+                // 代表有註冊成功
+                // board2.innerHTML = "註冊成功，請使用上方表單登入";
+                // 嘗試直接進入todo畫面，也就是直接給token
+                let re = await fetch("/login",{
+                    method:"POST", 
+                    headers: { "Content-Type": "application/json" }, // 加上這行
+                    body: JSON.stringify({
+                    "username":username,
+                    "password" :password
+                })             
+                })
+                let result =await re.json()
+                localStorage.setItem("my_token", result.access_token);
+                //導入todo畫面
+                window.location.href = '/todo.html'
+            }
+            else{
+                board2.innerHTML="使用者名稱重複，請重新註冊"
+            }
+        }
+    </script>
+    </div>
+    
+</body>
+</html>

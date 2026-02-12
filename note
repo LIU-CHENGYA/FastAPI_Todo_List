@@ -1,0 +1,88 @@
+一、定義功能
+新增待辦
+查看全部待辦
+更新待辦狀態(完成/未完成)或是文字內容
+刪除待辦
+
+二、資料庫欄位設計
+table: 
+    todo
+欄位:
+    id:自動產生
+    content:代辦事項
+    status:完成/未完成 (布林值)
+    created_at：建立時間（方便排序）
+    updated_at：更新時間（方便追蹤修改）
+
+
+三、api設計
+1. 新增待辦api
+    POST/api/todo
+    透過請求文本接收json
+    {"content":"代辦事項"}
+
+    使用json回傳給前端:回傳新建立的待辦項目（包含 id、content、status）。
+    {"ok":True}
+
+2. 查看全部待辦(取得所有留言)
+    GET/api/todo
+    沒有接收任何資料
+
+    使用json回傳給前端
+    [
+    { "id": 1, "content": "買牛奶", "status": false },
+    { "id": 2, "content": "寫作業", "status": true }
+    ]
+
+3. 更新待辦狀態或是文字內容 (完成-未完成)
+    PUT/api/todo
+    使用路徑參數接收要更改的id
+    PUT /api/todo/{id}
+    請求 body 可以包含要更新的欄位
+    { "status": true }
+    使用json回傳給前端:以回傳更新後的完整待辦項目
+    {"ok":True}
+
+4. 刪除待辦
+    DELETE/api/todo
+    使用路徑參數接收要更改的id
+    PUT /api/todo/{id}
+
+    使用json回傳給前端
+    {"ok":True}
+
+
+
+#困難的更新部分:
+狀態管理
+
+    你需要知道「這個待辦目前是顯示模式還是編輯模式」。
+
+    可以用一個布林值（例如 isEditing）來控制。
+
+    當 isEditing = true，就顯示輸入框；否則顯示文字。
+
+更新流程
+
+    使用者在輸入框修改內容後，按下「確認」或「儲存」。
+
+        這時候你要：
+
+        取得輸入框的值。
+
+        呼叫你的 FastAPI PUT /api/todo/{id} endpoint，把新的內容和狀態送到後端。
+
+        更新前端畫面，把輸入框換回文字顯示。
+
+按下修改按鈕=> isEditing = true
+if isEditing = true
+顯示輸入框
+else
+
+
+
+進階版調整
+1. 在 todo_list 資料表加一個欄位 owner。當你新增 Todo 時，把 current_user["username"] 存進去；查詢時，只查詢 WHERE owner = %s。這樣每個使用者登入後，就只能看到自己的待辦清單了！
+2. 新增登入的頁面
+3. 新增登出功能 =>登出後回登入的畫面
+4. 使用者的帳密存到資料表中
