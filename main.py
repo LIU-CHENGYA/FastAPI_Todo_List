@@ -14,11 +14,18 @@ from fastapi.staticfiles import StaticFiles
 app = FastAPI() 
 
 con = mysql.connector.connect(
-    user="root",
-    password="110305103ms",
-    host = "localhost",
+    user="fastapi_user",
+    password="你剛設定的密碼",
+    host="localhost",
     database="fastapi"
 )
+
+# con = mysql.connector.connect(
+#     user="root",
+#     password="110305103ms",
+#     host = "localhost",
+#     database="fastapi"
+# )
 
 # --- 2. 配置與安全工具 ---
 SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
