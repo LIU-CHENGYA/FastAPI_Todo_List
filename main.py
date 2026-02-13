@@ -101,6 +101,19 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     return user
 
 # --- 4. API 路徑  ---
+#新增一個 /token API，專門用來處理登入並回傳 token，例如：
+#如果你要符合 OAuth2 標準，建議保留 /token，因為很多工具（Swagger、第三方 API client）都預設會找 /token。
+@app.post("/token")
+async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
+    cursor = con.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM profile WHERE username=%s", [form_data.username])
+    user = cursor.fetchone()
+
+    if not user or not verify_password(form_data.password, user["password"]):
+        raise HTTPException(status_code=400, detail="帳號或密碼錯誤")
+
+    access_token = create_access_token(data={"sub": user["username"]})
+    return {"access_token": access_token, "token_type": "bearer"}
 
 #登入api
 @app.post("/login")
