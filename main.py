@@ -15,7 +15,7 @@ app = FastAPI()
 
 con = mysql.connector.connect(
     user="fastapi_user",
-    password="你剛設定的密碼",
+    password="110305ms",
     host="localhost",
     database="fastapi"
 )
